@@ -92,6 +92,9 @@ if __name__ == "__main__":
     tela = pygame.display.set_mode((LARGURA, ALTURA))
     pygame.display.set_caption("Snake Game - Devorar Planetas")
 
+    from cobra import Cobra, carregar_imagens_cobra
+    carregar_imagens_cobra()
+
     tela_menu(tela)
     jogo(tela)
 
