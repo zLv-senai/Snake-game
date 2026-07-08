@@ -1,6 +1,6 @@
 import pygame
 
-from config import ALTURA, BRANCO, FPS_JOGO, LARGURA, PRETO, TAMANHO, VERMELHO
+from config import ALTURA, BRANCO, LARGURA, PRETO, TAMANHO, VERMELHO, calcular_fps
 from cobra import Cobra
 from planeta import Planeta
 from menu import tela_menu
@@ -73,7 +73,7 @@ def rodada(tela, fonte, clock):
             cobra.cresce()
             planeta.reposicionar()
 
-        clock.tick(FPS_JOGO)
+        clock.tick(calcular_fps(tela.get_width(), tela.get_height()))
 
 
 def jogo(tela):
