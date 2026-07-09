@@ -2,7 +2,9 @@ import random
 
 import pygame
 
-from config import ALTURA, LARGURA, TAMANHO, VERMELHO
+
+from config import  TAMANHO, VERMELHO
+
 
 
 class Planeta:
@@ -33,16 +35,21 @@ class Planeta:
         self.reposicionar()
 
     def reposicionar(self):
-        self.x = random.randrange(0, LARGURA - self.tamanho, TAMANHO)
-        self.y = random.randrange(0, ALTURA - self.tamanho, TAMANHO)
+
+        """Coloca o planeta em uma posição aleatória na tela."""
+
+        largura, altura = pygame.display.get_surface().get_size()
+
+        self.x = random.randrange(0, largura - self.tamanho, TAMANHO)
+        self.y = random.randrange(0, altura - self.tamanho, TAMANHO)
 
     def foi_comido_por(self, cobra_x, cobra_y):
-        # TODO: essa comparação exata (==) funciona bem para o planeta
-        # pequeno (mesmo tamanho de um segmento da cobra). Para o planeta
-        # "grande" (2x o tamanho), troquem por colisão de retângulos:
-        # pygame.Rect(cobra_x, cobra_y, TAMANHO, TAMANHO).colliderect(
-        #     pygame.Rect(self.x, self.y, self.tamanho, self.tamanho))
-        return cobra_x == self.x and cobra_y == self.y
+        # Cria as hitboxes (caixas de colisão) baseadas nas posições e tamanhos atuais
+        hitbox_cobra = pygame.Rect(cobra_x, cobra_y, TAMANHO, TAMANHO)
+        hitbox_planeta = pygame.Rect(self.x, self.y, self.tamanho, self.tamanho)
+        
+        # O colliderect retorna True se os retângulos se tocarem, e False caso contrário
+        return hitbox_cobra.colliderect(hitbox_planeta)
 
     def desenhar(self, tela):
         pygame.draw.rect(tela, VERMELHO, [self.x, self.y, self.tamanho, self.tamanho])

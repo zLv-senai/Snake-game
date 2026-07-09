@@ -8,7 +8,6 @@ from config import (FPS_PADRAO, AMARELO, AZUL_ESCURO,
     RESOLUCOES,
 )
 
-
 def carregar_som(nome_arquivo):
     """Carrega um som opcional - se o arquivo ainda não existir, não quebra o jogo."""
     try:
@@ -38,12 +37,11 @@ def tela_menu(tela):
     fonte_item = pygame.font.SysFont("Arial", 26)
     clock = pygame.time.Clock()
 
-    som_mover = carregar_som("menu_mover.wav")
-    som_selecionar = carregar_som("menu_selecionar.wav")
+    som_mover = carregar_som("mover.ogg")
+    som_selecionar = carregar_som("selecionar.ogg")
 
     pygame.mixer.music.load(os.path.join(PASTA_SONS, "musica_menu.mp3"))
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(0.1)
 
     estrelas = gerar_estrelas(tela.get_width(), tela.get_height())
 
@@ -52,6 +50,7 @@ def tela_menu(tela):
 
     esperando = True
     while esperando:
+        global largura, altura
         largura, altura = tela.get_width(), tela.get_height()
 
         tela.fill(AZUL_ESCURO)
@@ -102,14 +101,17 @@ def tela_menu(tela):
 def tela_opcoes(tela):
     """Tela de opções: volume e resolução. Retorna a tela (nova, se a
     resolução foi trocada)."""
+    global volume 
+
     fonte_titulo = pygame.font.SysFont("Arial", 32, bold=True)
     fonte_item = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
 
-    som_mover = carregar_som("mover.wav")
-    som_selecionar = carregar_som("selecionar.wav")
+    som_mover = carregar_som("mover.ogg")
+    som_selecionar = carregar_som("selecionar.ogg")
 
     volume = pygame.mixer.music.get_volume()
+
     indice_resolucao = 0
     for i, (l, a) in enumerate(RESOLUCOES):
         if (l, a) == (tela.get_width(), tela.get_height()):

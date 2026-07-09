@@ -6,9 +6,12 @@ PASTA_JOGO = os.path.dirname(os.path.abspath(__file__))
 PASTA_SONS = os.path.join(PASTA_JOGO, "sons")
 
 # Tela
-LARGURA = 800
-ALTURA = 400
+LARGURA_principal = 800
+ALTURA_principal = 400
 FPS_PADRAO = 10
+
+
+
 
 # Cores (Rgb)
 PRETO = (0, 0, 0)
@@ -31,13 +34,14 @@ RESOLUCOES = [
 ]
 
 # Tamanho de cada bloco (cobra e planeta pequeno)
-TAMANHO = 50
+TAMANHO = 25
+
 
 # Calcula o FPS ideal baseado na resolução da tela.
 
 def calcular_fps(Largura_atual, Altura_atual):    
     area = Largura_atual * Altura_atual
-    fator = sqrt(area / (LARGURA * ALTURA))
+    fator = sqrt(area / (LARGURA_principal * ALTURA_principal))
     return int(FPS_PADRAO * fator)
 
     

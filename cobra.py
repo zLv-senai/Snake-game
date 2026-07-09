@@ -34,8 +34,8 @@ class Cobra:
     """Representa a cobra: seus segmentos, direção e movimento."""
 
     def __init__(self, x_inicial, y_inicial):
-        self.x = x_inicial
-        self.y = y_inicial
+        self.x = (x_inicial // TAMANHO) * TAMANHO
+        self.y = (y_inicial // TAMANHO) * TAMANHO
         self.dx = 0
         self.dy = 0
         self.segmentos = []
