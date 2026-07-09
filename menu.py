@@ -1,29 +1,71 @@
 import os
-
+import random
 import pygame
 
-from config import ALTURA, BRANCO, FPS_MENU, LARGURA, PASTA_SONS, PRETO, VERDE
+from config import (FPS_PADRAO, AMARELO, AZUL_ESCURO,
+    BRANCO, CINZA, VERDE, 
+    PASTA_SONS,
+    RESOLUCOES,
+)
+
+
+def carregar_som(nome_arquivo):
+    """Carrega um som opcional - se o arquivo ainda não existir, não quebra o jogo."""
+    try:
+        return pygame.mixer.Sound(os.path.join(PASTA_SONS, nome_arquivo))
+    except (pygame.error, FileNotFoundError):
+        return None
+    
+def gerar_estrelas(largura, altura, quantidade=40):
+    return [
+        (random.randrange(0, largura), random.randrange(0, altura), random.randint(1, 2))
+        for _ in range(quantidade)
+    ]
+
+def desenhar_estrelas(tela, estrelas):
+    for x, y, raio in estrelas:
+        pygame.draw.circle(tela, BRANCO, (x, y), raio)
+
+
+
 
 
 def tela_menu(tela):
-    fonte = pygame.font.SysFont("Arial", 25)
+    """Tela inicial. Retorna a tela (pode ter mudado de tamanho, se o
+    jogador trocou a resolução na tela de opções)."""
+
+    fonte_titulo = pygame.font.SysFont("Arial", 42, bold=True)
+    fonte_item = pygame.font.SysFont("Arial", 26)
     clock = pygame.time.Clock()
+
+    som_mover = carregar_som("menu_mover.wav")
+    som_selecionar = carregar_som("menu_selecionar.wav")
 
     pygame.mixer.music.load(os.path.join(PASTA_SONS, "musica_menu.mp3"))
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.set_volume(0.1)
+
+    estrelas = gerar_estrelas(tela.get_width(), tela.get_height())
+
+    itens = ["Jogar", "Opções", "Sair"]
+    selecionado = 0
 
     esperando = True
     while esperando:
-        tela.fill(PRETO)
+        largura, altura = tela.get_width(), tela.get_height()
 
-        titulo = fonte.render("SNAKE GAME", True, VERDE)
-        jogar = fonte.render("ENTER para jogar", True, BRANCO)
-        opcoes = fonte.render("O para opções", True, BRANCO)
+        tela.fill(AZUL_ESCURO)
+        desenhar_estrelas(tela, estrelas)
 
-        tela.blit(titulo, [LARGURA // 2 - titulo.get_width() // 2, ALTURA // 2 - 80])
-        tela.blit(jogar, [LARGURA // 2 - jogar.get_width() // 2, ALTURA // 2])
-        tela.blit(opcoes, [LARGURA // 2 - opcoes.get_width() // 2, ALTURA // 2 + 35])
+        titulo = fonte_titulo.render("SNAKE GAME", True, VERDE)
+        tela.blit(titulo, [largura // 2 - titulo.get_width() // 2, altura // 4])
+
+        for i, item in enumerate(itens):
+            cor = AMARELO if i == selecionado else CINZA
+            prefixo = "> " if i == selecionado else "  "
+            texto = fonte_item.render(prefixo + item, True, cor)
+            y = altura // 2 + i * 40
+            tela.blit(texto, [largura // 2 - texto.get_width() // 2, y])
 
         pygame.display.update()
 
@@ -32,41 +74,76 @@ def tela_menu(tela):
                 pygame.quit()
                 exit()
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selecionado = (selecionado - 1) % len(itens)
+                    if som_mover:
+                        som_mover.play()
+                if event.key == pygame.K_DOWN:
+                    selecionado = (selecionado + 1) % len(itens)
+                    if som_mover:
+                        som_mover.play()
                 if event.key == pygame.K_RETURN:
-                    esperando = False
-                if event.key == pygame.K_o:
-                    tela_opcoes(tela)
+                    if som_selecionar:
+                        som_selecionar.play()
+                    if itens[selecionado] == "Jogar":
+                        esperando = False
+                    elif itens[selecionado] == "Opções":
+                        tela = tela_opcoes(tela)
+                        estrelas = gerar_estrelas(tela.get_width(), tela.get_height())
+                    elif itens[selecionado] == "Sair":
+                        pygame.quit()
+                        exit()
 
-        clock.tick(FPS_MENU)
+        clock.tick(FPS_PADRAO)
 
     pygame.mixer.music.stop()
-
+    return tela
 
 def tela_opcoes(tela):
-    """Tela de opções simples: por enquanto só o volume da música.
-
-    TODO: resolução da tela ainda não está aqui - mudar resolução em
-    tempo real exige recriar a janela (pygame.display.set_mode) e
-    coordenar com quem usa LARGURA/ALTURA em outros arquivos. É mais
-    trabalhoso, então deixamos separado - avisem se quiserem ajuda.
-    """
-    fonte = pygame.font.SysFont("Arial", 25)
+    """Tela de opções: volume e resolução. Retorna a tela (nova, se a
+    resolução foi trocada)."""
+    fonte_titulo = pygame.font.SysFont("Arial", 32, bold=True)
+    fonte_item = pygame.font.SysFont("Arial", 24)
     clock = pygame.time.Clock()
+
+    som_mover = carregar_som("mover.wav")
+    som_selecionar = carregar_som("selecionar.wav")
+
     volume = pygame.mixer.music.get_volume()
+    indice_resolucao = 0
+    for i, (l, a) in enumerate(RESOLUCOES):
+        if (l, a) == (tela.get_width(), tela.get_height()):
+            indice_resolucao = i
+            break
+
+    opcoes = ["Volume", "Resolução", "Voltar"]
+    selecionado = 0
 
     esperando = True
     while esperando:
-        tela.fill(PRETO)
+        largura, altura = tela.get_width(), tela.get_height()
 
-        titulo = fonte.render("OPÇÕES", True, VERDE)
-        instrucao = fonte.render("Setas CIMA/BAIXO ajustam o volume", True, BRANCO)
-        valor = fonte.render(f"Volume: {int(volume * 100)}%", True, BRANCO)
-        voltar = fonte.render("ESC para voltar", True, BRANCO)
+        tela.fill(AZUL_ESCURO)
 
-        tela.blit(titulo, [LARGURA // 2 - titulo.get_width() // 2, ALTURA // 2 - 100])
-        tela.blit(instrucao, [LARGURA // 2 - instrucao.get_width() // 2, ALTURA // 2 - 40])
-        tela.blit(valor, [LARGURA // 2 - valor.get_width() // 2, ALTURA // 2])
-        tela.blit(voltar, [LARGURA // 2 - voltar.get_width() // 2, ALTURA // 2 + 60])
+        titulo = fonte_titulo.render("OPÇÕES", True, VERDE)
+        tela.blit(titulo, [largura // 2 - titulo.get_width() // 2, altura // 6])
+
+        valores = [
+            f"{int(volume * 100)}%",
+            f"{RESOLUCOES[indice_resolucao][0]}x{RESOLUCOES[indice_resolucao][1]}",
+            "",
+        ]
+
+        for i, nome in enumerate(opcoes):
+            cor = AMARELO if i == selecionado else CINZA
+            prefixo = "> " if i == selecionado else "  "
+            linha = f"{prefixo}{nome}  {valores[i]}".rstrip()
+            texto = fonte_item.render(linha, True, cor)
+            y = altura // 2 - 20 + i * 40
+            tela.blit(texto, [largura // 2 - texto.get_width() // 2, y])
+
+        instrucao = fonte_item.render("Setas: navegar/ajustar   ESC: voltar", True, CINZA)
+        tela.blit(instrucao, [largura // 2 - instrucao.get_width() // 2, altura - 40])
 
         pygame.display.update()
 
@@ -75,13 +152,37 @@ def tela_opcoes(tela):
                 pygame.quit()
                 exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    esperando = False
                 if event.key == pygame.K_UP:
-                    volume = min(1.0, volume + 0.1)
-                    pygame.mixer.music.set_volume(volume)
+                    selecionado = (selecionado - 1) % len(opcoes)
+                    if som_mover:
+                        som_mover.play()
                 if event.key == pygame.K_DOWN:
-                    volume = max(0.0, volume - 0.1)
-                    pygame.mixer.music.set_volume(volume)
+                    selecionado = (selecionado + 1) % len(opcoes)
+                    if som_mover:
+                        som_mover.play()
+                if event.key == pygame.K_LEFT:
+                    if opcoes[selecionado] == "Volume":
+                        volume = max(0.0, volume - 0.1)
+                        pygame.mixer.music.set_volume(volume)
+                    elif opcoes[selecionado] == "Resolução":
+                        indice_resolucao = (indice_resolucao - 1) % len(RESOLUCOES)
+                if event.key == pygame.K_RIGHT:
+                    if opcoes[selecionado] == "Volume":
+                        volume = min(1.0, volume + 0.1)
+                        pygame.mixer.music.set_volume(volume)
+                    elif opcoes[selecionado] == "Resolução":
+                        indice_resolucao = (indice_resolucao + 1) % len(RESOLUCOES)
+                confirmou_voltar = event.key == pygame.K_ESCAPE or (
+                    event.key == pygame.K_RETURN and opcoes[selecionado] == "Voltar"
+                )
+                if confirmou_voltar:
+                    if som_selecionar:
+                        som_selecionar.play()
+                    nova_largura, nova_altura = RESOLUCOES[indice_resolucao]
+                    if (nova_largura, nova_altura) != (tela.get_width(), tela.get_height()):
+                        tela = pygame.display.set_mode((nova_largura, nova_altura))
+                    esperando = False
 
-        clock.tick(FPS_MENU)
+        clock.tick(FPS_PADRAO)
+
+    return tela
