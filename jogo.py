@@ -159,6 +159,9 @@ if __name__ == "__main__":
     from cobra import Cobra, carregar_imagens_cobra
     carregar_imagens_cobra()
 
+    from planeta import carregar_planeta_imagem
+    carregar_planeta_imagem()
+
     tela_menu(tela)
     jogo(tela)
 
